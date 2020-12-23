@@ -2,16 +2,22 @@ import pylightxl as xl
 import os
 
 #print(os.getcwd());
+
+#read the excel file
 md = xl.readcsv(fn='/home/tobirama/Documents/wk APRI 1999.csv', delimiter=',')
 names = md.ws_names
 
-#crop = md.ws(ws='Sheet1').address(address='A5')
+#initialize a global variable array to be used through out the document
 sheetDictionary = []
+
+#get the first column from the file with all the markets
 markets = md.ws(ws='Sheet1').col(col=1)
 
+#create an array of indexes based on a key word present in the excel file
 startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
 endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
 
+#extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
 for x in range(len(startIndexes)) :
     cIndex = startIndexes[x] - 1
     cropAdd = "A" + str(cIndex)
@@ -19,35 +25,59 @@ for x in range(len(startIndexes)) :
 
     startIndexes[x] = startIndexes[x] + 2
     startAdd = "A" + str(startIndexes[x])
-    endAdd = "C" + str(endIndexes[x])
+    endAdd = "F" + str(endIndexes[x])
     addRange = startAdd+ ":" + endAdd
 
     crops = md.ws(ws='Sheet1').range(address=addRange, formula=False)
     crops[0][0] = cropName
-    print(crops)
+
+    #add it to the global array variable to be used later in the writing the new excel file
     sheetDictionary.append(crops)
-print(sheetDictionary)
 
 # take this list for example as our input data that we want to put in column A
-mydata = [10,20,30,40]
-test = ["Crop", "Data Element", "Org Unit", "Value"]
+columnHeader = ["Crop", "Data Element", "Org Unit", "Value"]
 
 # create a black db
 db = xl.Database()
 
+#create the array to hold our sheets
 weekArray = sheetDictionary[0][0][1:]
-# add a blank worksheet to the db
-for week in weekArray :
+
+#separating individual column lists from the extracted bulky list
+orgUnits = []
+cropList = []
+valueList = []
+for x in range(len(sheetDictionary)):
+    for y in sheetDictionary[x][1:] :
+        valueList.append(y[1:])
+        orgUnits.append(y[0])
+
+        #making sure the crops List and the org Units are synchronized with the blank cells within them
+        if y[0] == '':
+            cropList.append("")
+        else:
+            cropList.append(sheetDictionary[x][0][0])
+
+# iterate through every sheet to be created in the document
+for num, week in enumerate(weekArray) :
+    #add a blank worksheet to the db for each week
     db.add_ws(ws=week)
 
-    # loop to add our data to the worksheet
-    for row_id, data in enumerate(mydata, start=2):
-        # print(row_id, data)
+    #loop through the crops list to add to the crops column
+    for row_id, data in enumerate(cropList, start=2) :
         db.ws(ws=week).update_index(row=row_id, col=1, val=data)
 
-    # write out the db
-    for col_id, data in enumerate(test, start=1):
-        # print(row_id, data)
+    #loop through the markets list to add to the org units column
+    for row_id, data in enumerate(orgUnits, start=2) :
+        db.ws(ws=week).update_index(row=row_id, col=3, val=data)
+
+    #for each values in the sheet, add respective values to the values column
+    for row_id, data in enumerate(valueList, start=2) :
+        db.ws(ws=week).update_index(row=row_id, col=4, val=data[num])
+
+    # write the column headers to the excel sheet
+    for col_id, data in enumerate(columnHeader, start=1):
         db.ws(ws=week).update_index(row=1, col=col_id, val=data)
 
-xl.writexl(db=db, fn="/home/tobirama/Documents/something.xlsx")
+#write out the document finally
+xl.writexl(db=db, fn="/home/tobirama/Documents/File.xlsx")
