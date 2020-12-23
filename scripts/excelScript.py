@@ -6,17 +6,13 @@ import pandas as pd
 
 Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
 filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
-print(filename)
 
 fileName = filename.split("/")
 last = len(fileName) - 1
 name = fileName[last].split(".")[0]
-print(name)
 newFileName = "new-"+ name
-print(newFileName)
 
 filePath = filename.replace(fileName[last], "")
-print(filePath)
 
 def reStructure(path) :
     #read the excel file
@@ -33,7 +29,7 @@ def reStructure(path) :
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
 
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
-    for x in range(len(startIndexes)) :
+    for x in range(len(endIndexes)) :
         cIndex = startIndexes[x] - 1
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
@@ -41,6 +37,7 @@ def reStructure(path) :
         startIndexes[x] = startIndexes[x] + 2
         startAdd = "A" + str(startIndexes[x])
         endAdd = "E" + str(endIndexes[x])
+
         addRange = startAdd+ ":" + endAdd
 
         crops = md.ws(ws='Sheet1').range(address=addRange, formula=False)
@@ -95,8 +92,9 @@ def reStructure(path) :
             db.ws(ws=week).update_index(row=1, col=col_id, val=data)
 
     #write out the document finally
-    xl.writexl(db=db, fn="/home/tobirama/Documents/{}.xlsx").format(newFileName)
-
+    editedFileName = filePath + "{}.xlsx".format(newFileName)
+    print(editedFileName)
+    xl.writexl(db=db, fn=editedFileName)
 
 if filename.lower().endswith('.csv'):
     reStructure(filename)
