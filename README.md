@@ -1,6 +1,6 @@
 # Namis-Excel-Script
 ## Operation
-Basically, the script to be run is in the src folder, "excelScript.py"
+Basically, the script to be run is in the scripts folder, called "excelScript.py"
 It can be run by simply typing "python excelScript.py" in terminal.
 
 A file picker/selector window pops up by which a user can then just pick the preferred excel file to be restructured.
