@@ -1,10 +1,22 @@
 import pylightxl as xl
 import os
+from tkinter import Tk     # from tkinter import Tk for Python 3.x
+from tkinter.filedialog import askopenfilename
 
-#print(os.getcwd());
+Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+print(filename)
+
+fileName = filename.split("/")
+last = len(fileName) - 1
+newFileName = "new-"+fileName[last]
+print(newFileName)
+
+filePath = filename.replace(fileName[last], "")
+print(filePath)
 
 #read the excel file
-md = xl.readcsv(fn='/home/tobirama/Documents/wk APRI 1999.csv', delimiter=',')
+md = xl.readcsv(fn=filename, delimiter=',')
 names = md.ws_names
 
 #initialize a global variable array to be used through out the document
@@ -80,4 +92,4 @@ for num, week in enumerate(weekArray) :
         db.ws(ws=week).update_index(row=1, col=col_id, val=data)
 
 #write out the document finally
-xl.writexl(db=db, fn="/home/tobirama/Documents/File.xlsx")
+#xl.writexl(db=db, fn="/home/tobirama/Documents/File.xlsx")
