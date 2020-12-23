@@ -26,23 +26,28 @@ for x in range(len(startIndexes)) :
     crops[0][0] = cropName
     print(crops)
     sheetDictionary.append(crops)
-
-
 print(sheetDictionary)
 
-
 # take this list for example as our input data that we want to put in column A
-#mydata = [10,20,30,40]
+mydata = [10,20,30,40]
+test = ["Crop", "Data Element", "Org Unit", "Value"]
 
 # create a black db
-#db = xl.Database()
+db = xl.Database()
 
+weekArray = sheetDictionary[0][0][1:]
 # add a blank worksheet to the db
-#db.add_ws(ws="Sheet1")
+for week in weekArray :
+    db.add_ws(ws=week)
 
-# loop to add our data to the worksheet
-#for row_id, data in enumerate(mydata, start=1):
-    #db.ws(ws="Sheet1").update_index(row=row_id, col=1, val=data)
+    # loop to add our data to the worksheet
+    for row_id, data in enumerate(mydata, start=2):
+        # print(row_id, data)
+        db.ws(ws=week).update_index(row=row_id, col=1, val=data)
 
-# write out the db
-#xl.writexl(db=db, fn="/home/tobirama/Documents/output.xlsx")
+    # write out the db
+    for col_id, data in enumerate(test, start=1):
+        # print(row_id, data)
+        db.ws(ws=week).update_index(row=1, col=col_id, val=data)
+
+xl.writexl(db=db, fn="/home/tobirama/Documents/something.xlsx")
