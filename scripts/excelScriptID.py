@@ -4,17 +4,44 @@ from tkinter.filedialog import askopenfilename
 import sys
 import pandas as pd
 
-Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
-filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+# we don't want a full GUI, so keep the root window from appearing
+Tk().withdraw()
+# show an "Open" dialog box and return the path to the selected file
+filename = askopenfilename()
 
+#create a new-filename using the old filename from the path obtained
 fileName = filename.split("/")
 last = len(fileName) - 1
 name = fileName[last].split(".")[0]
 newFileName = "New-"+ name
 
+#removing the extension from the file path
 filePath = filename.replace(fileName[last], "")
 
 def reStructure(path) :
+    #read the excel file from dhis2 with market names and their ids
+    db = xl.readcsv(fn="DHIS2_Markets.csv", delimiter=',')
+    #read the excel file from dhis2 with crop names and their respective ids
+    cropsDb = xl.readcsv(fn="dhis2_crops - Sheet1.csv", delimiter=',')
+
+    #get the market name and its respective id list from the dhis2 excel sheet
+    marketIDs = db.ws(ws='Sheet1').col(col=1)
+    marketNames = db.ws(ws='Sheet1').col(col=2)
+
+    # get the crop name and its respective id list from the dhis2 excel sheet
+    crops = cropsDb.ws(ws='Sheet1').col(col=2)
+    cropsIDs = cropsDb.ws(ws='Sheet1').col(col=1)
+
+    #remove the column headers from the crop and orgUnits lists
+    marketNames.pop(0)
+    marketIDs.pop(0)
+    crops.pop(0)
+    cropsIDs.pop(0)
+
+    #remove the suffix of the market names in the list from "soso market" to just "soso"
+    for x in range(len(marketNames)):
+        marketNames[x] = marketNames[x].replace(" Market", "")
+
     #read the excel file
     md = xl.readcsv(fn=path, delimiter=',')
 
@@ -23,7 +50,6 @@ def reStructure(path) :
 
     #get the first column from the file with all the markets
     markets = md.ws(ws='Sheet1').col(col=1)
-
     #create an array of indexes based on a key word present in the excel file
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
@@ -34,20 +60,37 @@ def reStructure(path) :
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
 
+        #replace the crop name from the excel sheet with the id name from dhis2
+        for i, crop in enumerate(crops, start=0):
+            if cropName.lower() == crop.lower() or (cropName.lower() in crop.lower()) or (
+                    crop.lower() in cropName.lower()):
+                cropName = cropsIDs[i]
+
         startIndexes[x] = startIndexes[x] + 2
         startAdd = "A" + str(startIndexes[x])
         endAdd = "E" + str(endIndexes[x])
 
-        addRange = startAdd+ ":" + endAdd
+        addRange = startAdd + ":" + endAdd
 
-        crops = md.ws(ws='Sheet1').range(address=addRange, formula=False)
-        crops[0][0] = cropName
+        #replace the market names from the excel file selected with the ids from the dhis2 marketIDs list
+        crops2 = md.ws(ws='Sheet1').range(address=addRange, formula=False)
+        for index, data in enumerate(crops2, start=2):
+            for i, marketName in enumerate(marketNames):
+                if marketName.lower() == data[0].lower() or (marketName.lower() in data[0].lower()) or (
+                        data[0].lower() in marketName.lower()):
+                    data[0] = marketIDs[i]
 
-        #add it to the global array variable to be used later in the writing the new excel file
-        sheetDictionary.append(crops)
+        crops2[0][0] = cropName
+
+        # add it to the global array variable to be used later in the writing the new excel file
+        sheetDictionary.append(crops2)
+
+    #removing an overflowing element from the markets list
+    for sheet in sheetDictionary:
+        sheet.pop(1)
 
     # take this list for example as our input data that we want to put in column A
-    columnHeader = ["Crop", "Data Element", "Org Unit", "Value"]
+    columnHeader = ["Crop", "Period", "Org Unit", "Value"]
 
     # create a black db
     db = xl.Database()
