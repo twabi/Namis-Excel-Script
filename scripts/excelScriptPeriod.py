@@ -17,46 +17,51 @@ last = len(fileName) - 1
 name = fileName[last].split(".")[0]
 newFileName = "New-"+ name
 
+#initialize the year variable for the excel sheet document
 dateYear = ""
 
+#okay so this big if statement is doing one thing, and that is modify the document name inorder to parse
+# the date on the name. So that means changing "WK" prefix in the name to remain with the parseable date value
 if "WK " in name:
+    #i replace the prefix here, with nothing
     dateName = name.replace("WK ", "")
-    date = dateName
+
+    #i check if the name has a weird month name in this case, a full month name, coz the time will be parsed differently in that case
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        dt = datetime.datetime.strptime(date, '%B %Y')
+        #parse the datetime
+        dt = datetime.datetime.strptime(dateName, '%B %Y')
     elif "APRI".lower() in name.lower():
-        date = name.replace("APRI", "APR")
-        dt = datetime.datetime.strptime(date, '%b %Y')
+        #one of the files has a weird month name, neither full nor shorthand, so i convert this to shorthand then parse it
+        dateName = dateName.replace("APRI", "APR")
+        dt = datetime.datetime.strptime(dateName, '%b %Y')#parse the datetime
     else :
-        dt = datetime.datetime.strptime(date, '%b %Y')
+        dt = datetime.datetime.strptime(dateName, '%b %Y')#parse the datetime
 
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
 elif "wk " in name:
     dateName = name.replace("wk ", "")
-    date = dateName
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        dt = datetime.datetime.strptime(date, '%B %Y')
+        dt = datetime.datetime.strptime(dateName, '%B %Y')
     elif "APRI".lower() in name.lower():
-        date = date.replace("APRI", "APR")
-        dt = datetime.datetime.strptime(date, '%b %Y')
+        dateName = dateName.replace("APRI", "APR")
+        dt = datetime.datetime.strptime(dateName, '%b %Y')
     else:
-        dt = datetime.datetime.strptime(date, '%b %Y')
+        dt = datetime.datetime.strptime(dateName, '%b %Y')
 
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
 else :
     dateName = name.replace("WK", "")
-    date = dateName
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        dt = datetime.datetime.strptime(date, '%B%Y')
+        dt = datetime.datetime.strptime(dateName, '%B%Y')
     elif "APRI".lower() in name.lower():
-        date = name.replace("APRI", "APR")
-        dt = datetime.datetime.strptime(date, '%b %Y')
+        dateName = dateName.replace("APRI", "APR")
+        dt = datetime.datetime.strptime(dateName, '%b %Y')
     else:
-        dt = datetime.datetime.strptime(date, '%b%Y')
+        dt = datetime.datetime.strptime(dateName, '%b%Y')
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
@@ -65,18 +70,21 @@ else :
 #removing the extension from the file path
 filePath = filename.replace(fileName[last], "")
 
+#read the excel sheet with all the week data from dhis2
 wd = xl.readcsv(fn="week-map.csv", delimiter=',')
+#read the month column and the equivalent week number
 weekData = wd.ws(ws='Sheet1').range(address='A1:B53', formula=False)
-weekData.pop(0)
+weekData.pop(0) #remove the first element (the headers in the excel sheet)
 weeksArray = []
 
+#retriving the week numbers for the month name on the document name by cross-checking in the array from the week excel sheet
 for data in weekData:
     if data[0].lower() in name.lower():
-        weeksArray.append(data[1])
+        weeksArray.append(data[1]) #append to the week array only those week numbers in the month of our document
 
 for x in range(len(weeksArray)):
+    #modify the elements in the array by adding the year to each element, so as to achieve the dhis2 format
     weeksArray[x] = dateYear + weeksArray[x]
-
 
 def reStructure(path) :
     #read the excel file from dhis2 with market names and their ids
