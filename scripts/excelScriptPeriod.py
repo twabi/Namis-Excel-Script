@@ -3,6 +3,8 @@ from tkinter import Tk     # from tkinter import Tk for Python 3.x
 from tkinter.filedialog import askopenfilename
 import sys
 import pandas as pd
+import datetime
+
 
 # we don't want a full GUI, so keep the root window from appearing
 Tk().withdraw()
@@ -15,7 +17,50 @@ last = len(fileName) - 1
 name = fileName[last].split(".")[0]
 newFileName = "New-"+ name
 
-print(name)
+dateYear = ""
+
+if "WK " in name:
+    dateName = name.replace("WK ", "")
+    date = dateName
+    if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
+        dt = datetime.datetime.strptime(date, '%B %Y')
+    elif "APRI".lower() in name.lower():
+        date = name.replace("APRI", "APR")
+        dt = datetime.datetime.strptime(date, '%b %Y')
+    else :
+        dt = datetime.datetime.strptime(date, '%b %Y')
+
+    if dt.year > 2000:
+        dt = dt.replace(year=dt.year - 100)
+    dateYear = dt.strftime('%Y')
+elif "wk " in name:
+    dateName = name.replace("wk ", "")
+    date = dateName
+    if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
+        dt = datetime.datetime.strptime(date, '%B %Y')
+    elif "APRI".lower() in name.lower():
+        date = date.replace("APRI", "APR")
+        dt = datetime.datetime.strptime(date, '%b %Y')
+    else:
+        dt = datetime.datetime.strptime(date, '%b %Y')
+
+    if dt.year > 2000:
+        dt = dt.replace(year=dt.year - 100)
+    dateYear = dt.strftime('%Y')
+else :
+    dateName = name.replace("WK", "")
+    date = dateName
+    if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
+        dt = datetime.datetime.strptime(date, '%B%Y')
+    elif "APRI".lower() in name.lower():
+        date = name.replace("APRI", "APR")
+        dt = datetime.datetime.strptime(date, '%b %Y')
+    else:
+        dt = datetime.datetime.strptime(date, '%b%Y')
+    if dt.year > 2000:
+        dt = dt.replace(year=dt.year - 100)
+    dateYear = dt.strftime('%Y')
+
 
 #removing the extension from the file path
 filePath = filename.replace(fileName[last], "")
@@ -26,10 +71,12 @@ weekData.pop(0)
 weeksArray = []
 
 for data in weekData:
-    print(data[0] + "-" + data[1])
     if data[0].lower() in name.lower():
         weeksArray.append(data[1])
-print(weeksArray)
+
+for x in range(len(weeksArray)):
+    weeksArray[x] = dateYear + weeksArray[x]
+
 
 def reStructure(path) :
     #read the excel file from dhis2 with market names and their ids
