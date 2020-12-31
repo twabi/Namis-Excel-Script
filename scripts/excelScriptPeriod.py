@@ -182,6 +182,10 @@ def reStructure(path) :
         for row_id, data in enumerate(cropList, start=2) :
             db.ws(ws=week).update_index(row=row_id, col=1, val=data)
 
+        # loop through the crops list to add to the crops column
+        for row_id, wk in enumerate(cropList, start=2):
+            db.ws(ws=week).update_index(row=row_id, col=2, val=weeksArray[num])
+
         #loop through the markets list to add to the org units column
         for row_id, data in enumerate(orgUnits, start=2) :
             db.ws(ws=week).update_index(row=row_id, col=3, val=data)
@@ -197,7 +201,7 @@ def reStructure(path) :
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
-    #xl.writexl(db=db, fn=editedFileName)
+    xl.writexl(db=db, fn=editedFileName)
 
 if filename.lower().endswith('.csv'):
     reStructure(filename)
