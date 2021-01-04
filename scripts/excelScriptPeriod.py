@@ -4,6 +4,20 @@ from tkinter.filedialog import askopenfilename
 import sys
 import pandas as pd
 import datetime
+import datetime as gt
+
+def weeks(year, month):
+    _, start, _ = gt.datetime(year, month, 1).isocalendar()
+    for d in (31, 30, 29, 28):
+        try:
+            _, end, _ = gt.datetime(year, month, d).isocalendar()
+            break
+        except ValueError:  # skip attempts with bad dates
+            continue
+    if start > 50:  # spillover from previous year
+        return [start] + list(range(1, end + 1))
+    else:
+        return list(range(start, end + 1))
 
 
 # we don't want a full GUI, so keep the root window from appearing
@@ -19,6 +33,7 @@ newFileName = "New-"+ name
 
 #initialize the year variable for the excel sheet document
 dateYear = ""
+monthNumber = ""
 
 #okay so this big if statement is doing one thing, and that is modify the document name inorder to parse
 # the date on the name. So that means changing "WK" prefix in the name to remain with the parseable date value
@@ -40,6 +55,7 @@ if "WK " in name:
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
+    monthNumber = dt.strftime("%m")
 elif "wk " in name:
     dateName = name.replace("wk ", "")
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
@@ -53,6 +69,7 @@ elif "wk " in name:
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
+    monthNumber = dt.strftime("%m")
 else :
     dateName = name.replace("WK", "")
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
@@ -65,26 +82,24 @@ else :
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
-
+    monthNumber = dt.strftime("%m")
 
 #removing the extension from the file path
 filePath = filename.replace(fileName[last], "")
 
-#read the excel sheet with all the week data from dhis2
-wd = xl.readcsv(fn="week-map.csv", delimiter=',')
-#read the month column and the equivalent week number
-weekData = wd.ws(ws='Sheet1').range(address='A1:B53', formula=False)
-weekData.pop(0) #remove the first element (the headers in the excel sheet)
+weekNumberArray = weeks(int(dateYear), int(monthNumber))
+if int(monthNumber) == 1 :
+    weekNumberArray.pop(0)
+
 weeksArray = []
 
 #retriving the week numbers for the month name on the document name by cross-checking in the array from the week excel sheet
-for data in weekData:
-    if data[0].lower() in name.lower():
-        weeksArray.append(data[1]) #append to the week array only those week numbers in the month of our document
 
-for x in range(len(weeksArray)):
+for x in range(len(weekNumberArray)):
     #modify the elements in the array by adding the year to each element, so as to achieve the dhis2 format
-    weeksArray[x] = dateYear + weeksArray[x]
+    weeksArray.append(dateYear + "W" + str(weekNumberArray[x]))
+
+print(weeksArray)
 
 def reStructure(path) :
     #read the excel file from dhis2 with market names and their ids
