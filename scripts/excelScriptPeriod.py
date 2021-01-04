@@ -56,12 +56,12 @@ elif "wk " in name:
 else :
     dateName = name.replace("WK", "")
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        dt = datetime.datetime.strptime(dateName, '%B%Y')
+        dt = datetime.datetime.strptime(dateName, '%B%y')
     elif "APRI".lower() in name.lower():
         dateName = dateName.replace("APRI", "APR")
         dt = datetime.datetime.strptime(dateName, '%b %Y')
     else:
-        dt = datetime.datetime.strptime(dateName, '%b%Y')
+        dt = datetime.datetime.strptime(dateName, '%b%y')
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
