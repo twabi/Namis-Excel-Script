@@ -15,7 +15,7 @@ def weeks(year, month):
         except ValueError:  # skip attempts with bad dates
             continue
     if start > 50:  # spillover from previous year
-        return [start] + list(range(1, end + 1))
+        return list(range(1, end + 1))
     else:
         return list(range(start, end + 1))
 
@@ -37,25 +37,38 @@ monthNumber = ""
 
 #okay so this big if statement is doing one thing, and that is modify the document name inorder to parse
 # the date on the name. So that means changing "WK" prefix in the name to remain with the parseable date value
-if "WK " in name:
-    #i replace the prefix here, with nothing
-    dateName = name.replace("WK ", "")
+if "WK" in name:
+    if "WK " in name:
+        # i replace the prefix here, with nothing
+        dateName = name.replace("WK ", "")
+        # i check if the name has a weird month name in this case, a full month name, coz the time will be parsed differently in that case
+        if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
+            # parse the datetime
+            dt = datetime.datetime.strptime(dateName, '%B %Y')
+        elif "APRI".lower() in name.lower():
+            # one of the files has a weird month name, neither full nor shorthand, so i convert this to shorthand then parse it
+            dateName = dateName.replace("APRI", "APR")
+            dt = datetime.datetime.strptime(dateName, '%b %Y')  # parse the datetime
+        else:
+            dt = datetime.datetime.strptime(dateName, '%b %Y')  # parse the datetime
 
-    #i check if the name has a weird month name in this case, a full month name, coz the time will be parsed differently in that case
-    if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        #parse the datetime
-        dt = datetime.datetime.strptime(dateName, '%B %Y')
-    elif "APRI".lower() in name.lower():
-        #one of the files has a weird month name, neither full nor shorthand, so i convert this to shorthand then parse it
-        dateName = dateName.replace("APRI", "APR")
-        dt = datetime.datetime.strptime(dateName, '%b %Y')#parse the datetime
-    else :
-        dt = datetime.datetime.strptime(dateName, '%b %Y')#parse the datetime
-
-    if dt.year > 2000:
-        dt = dt.replace(year=dt.year - 100)
-    dateYear = dt.strftime('%Y')
-    monthNumber = dt.strftime("%m")
+        if dt.year > 2000:
+            dt = dt.replace(year=dt.year - 100)
+        dateYear = dt.strftime('%Y')
+        monthNumber = dt.strftime("%m")
+    else:
+        dateName = name.replace("WK", "")
+        if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
+            dt = datetime.datetime.strptime(dateName, '%B%y')
+        elif "APRI".lower() in name.lower():
+            dateName = dateName.replace("APRI", "APR")
+            dt = datetime.datetime.strptime(dateName, '%b%Y')
+        else:
+            dt = datetime.datetime.strptime(dateName, '%b%y')
+        if dt.year > 2000:
+            dt = dt.replace(year=dt.year - 100)
+        dateYear = dt.strftime('%Y')
+        monthNumber = dt.strftime("%m")
 elif "wk " in name:
     dateName = name.replace("wk ", "")
     if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
@@ -71,14 +84,8 @@ elif "wk " in name:
     dateYear = dt.strftime('%Y')
     monthNumber = dt.strftime("%m")
 else :
-    dateName = name.replace("WK", "")
-    if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        dt = datetime.datetime.strptime(dateName, '%B%y')
-    elif "APRI".lower() in name.lower():
-        dateName = dateName.replace("APRI", "APR")
-        dt = datetime.datetime.strptime(dateName, '%b %Y')
-    else:
-        dt = datetime.datetime.strptime(dateName, '%b%y')
+    dateName = name
+    dt = datetime.datetime.strptime(dateName, '%B%Y')
     if dt.year > 2000:
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
@@ -88,9 +95,14 @@ else :
 filePath = filename.replace(fileName[last], "")
 
 weekNumberArray = weeks(int(dateYear), int(monthNumber))
-if int(monthNumber) == 1 :
-    weekNumberArray.pop(0)
+prevArray=[]
+if int(monthNumber) != 1:
+    prevArray = weeks(1999, int(monthNumber) - 1)
 
+for d in weekNumberArray:
+    if d in prevArray:
+        weekNumberArray.remove(d)
+print(weekNumberArray)
 weeksArray = []
 
 #retriving the week numbers for the month name on the document name by cross-checking in the array from the week excel sheet
@@ -179,6 +191,7 @@ def reStructure(path) :
     db = xl.Database()
 
     #create the array to hold our sheets
+    print(sheetDictionary)
     weekArray = sheetDictionary[0][0][1:]
 
     #separating individual column lists from the extracted bulky list
@@ -224,7 +237,7 @@ def reStructure(path) :
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
-    xl.writexl(db=db, fn=editedFileName)
+    #xl.writexl(db=db, fn=editedFileName)
 
 if filename.lower().endswith('.csv'):
     reStructure(filename)
