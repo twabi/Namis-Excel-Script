@@ -145,6 +145,7 @@ def reStructure(path) :
 
     #get the first column from the file with all the markets
     markets = md.ws(ws='Sheet1').col(col=1)
+    print(markets)
     #create an array of indexes based on a key word present in the excel file
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
@@ -191,7 +192,6 @@ def reStructure(path) :
     db = xl.Database()
 
     #create the array to hold our sheets
-    print(sheetDictionary)
     weekArray = sheetDictionary[0][0][1:]
 
     #separating individual column lists from the extracted bulky list
