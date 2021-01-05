@@ -150,11 +150,20 @@ def reStructure(path) :
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
 
+    if (len(startIndexes) == 0) and (len(endIndexes) == 0) :
+        startIndexes = [x for x in range(len(markets)) if markets[x] == ""]
+        endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PRICE"]
+    startIndexes.pop(len(startIndexes)-1)
+    for x in startIndexes:
+        if x-1 in startIndexes:
+            startIndexes.remove(x-1)
+
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
     for x in range(len(endIndexes)) :
         cIndex = startIndexes[x] - 1
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        #print(cropName)
 
         #replace the crop name from the excel sheet with the id name from dhis2
         for i, crop in enumerate(crops, start=0):
@@ -237,7 +246,7 @@ def reStructure(path) :
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
-    #xl.writexl(db=db, fn=editedFileName)
+    xl.writexl(db=db, fn=editedFileName)
 
 if filename.lower().endswith('.csv'):
     reStructure(filename)
