@@ -102,7 +102,6 @@ if int(monthNumber) != 1:
 for d in weekNumberArray:
     if d in prevArray:
         weekNumberArray.remove(d)
-print(weekNumberArray)
 weeksArray = []
 
 #retriving the week numbers for the month name on the document name by cross-checking in the array from the week excel sheet
@@ -110,7 +109,6 @@ weeksArray = []
 for x in range(len(weekNumberArray)):
     #modify the elements in the array by adding the year to each element, so as to achieve the dhis2 format
     weeksArray.append(dateYear + "W" + str(weekNumberArray[x]))
-
 print(weeksArray)
 
 def reStructure(path) :
@@ -145,7 +143,7 @@ def reStructure(path) :
 
     #get the first column from the file with all the markets
     markets = md.ws(ws='Sheet1').col(col=1)
-    print(markets)
+
     #create an array of indexes based on a key word present in the excel file
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
