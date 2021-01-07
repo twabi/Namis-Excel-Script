@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 import datetime
 import datetime as gt
+import re
 
 def weeks(year, month):
     _, start, _ = gt.datetime(year, month, 1).isocalendar()
@@ -32,11 +33,12 @@ name = fileName[last].split(".")[0]
 newFileName = "New-"+ name
 
 #initialize the year variable for the excel sheet document
-dateYear = ""
-monthNumber = ""
+#dateYear = ""
+#monthNumber = ""
 
 #okay so this big if statement is doing one thing, and that is modify the document name inorder to parse
 # the date on the name. So that means changing "WK" prefix in the name to remain with the parseable date value
+'''
 if "WK" in name:
     if "WK " in name:
         # i replace the prefix here, with nothing
@@ -90,14 +92,34 @@ else :
         dt = dt.replace(year=dt.year - 100)
     dateYear = dt.strftime('%Y')
     monthNumber = dt.strftime("%m")
+'''
+months_short = []
+for i in range(1,13):
+    months_short.append((i, datetime.date(2008, i, 1).strftime('%b')))
+months_choices = []
+for i in range(1,13):
+    months_choices.append((i, datetime.date(2008, i, 1).strftime('%B')))
+
+year_number = re.findall(r'\d+', name)
+
+month_number = ""
+for data in months_choices:
+    if data[1].lower() in name.lower():
+        print(data[1])
+        month_number = data[0]
+
+if month_number == "":
+    for data in months_short:
+        if data[1].lower() in name.lower():
+            print(data[1])
+            month_number = data[0]
 
 #removing the extension from the file path
 filePath = filename.replace(fileName[last], "")
 
-weekNumberArray = weeks(int(dateYear), int(monthNumber))
+print(month_number)
+weekNumberArray = weeks(int(year_number[0]), int(month_number))
 prevArray=[]
-if int(monthNumber) != 1:
-    prevArray = weeks(1999, int(monthNumber) - 1)
 
 for d in weekNumberArray:
     if d in prevArray:
@@ -108,7 +130,7 @@ weeksArray = []
 
 for x in range(len(weekNumberArray)):
     #modify the elements in the array by adding the year to each element, so as to achieve the dhis2 format
-    weeksArray.append(dateYear + "W" + str(weekNumberArray[x]))
+    weeksArray.append(year_number[0] + "W" + str(weekNumberArray[x]))
 print(weeksArray)
 
 def reStructure(path) :
@@ -143,6 +165,7 @@ def reStructure(path) :
 
     #get the first column from the file with all the markets
     markets = md.ws(ws='Sheet1').col(col=1)
+    print(markets)
 
     #create an array of indexes based on a key word present in the excel file
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
@@ -151,13 +174,15 @@ def reStructure(path) :
     if (len(startIndexes) == 0) and (len(endIndexes) == 0) :
         startIndexes = [x for x in range(len(markets)) if markets[x] == ""]
         endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PRICE"]
-    startIndexes.pop(len(startIndexes)-1)
-    for x in startIndexes:
-        if x-1 in startIndexes:
-            startIndexes.remove(x-1)
+        for x in startIndexes:
+            if x-1 in startIndexes:
+                startIndexes.remove(x-1)
+        startIndexes.pop()
 
+    print(startIndexes)
+    print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
-    for x in range(len(endIndexes)) :
+    for x in range(len(startIndexes)) :
         cIndex = startIndexes[x] - 1
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
@@ -244,7 +269,7 @@ def reStructure(path) :
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
-    xl.writexl(db=db, fn=editedFileName)
+    #xl.writexl(db=db, fn=editedFileName)
 
 if filename.lower().endswith('.csv'):
     reStructure(filename)
