@@ -6,7 +6,9 @@ import pandas as pd
 import datetime
 import datetime as gt
 import re
+import string
 
+alphabet = string.ascii_uppercase
 def weeks(year, month):
     _, start, _ = gt.datetime(year, month, 1).isocalendar()
     for d in (31, 30, 29, 28):
@@ -173,20 +175,26 @@ def reStructure(path) :
 
     if (len(startIndexes) == 0) and (len(endIndexes) == 0) :
         startIndexes = [x for x in range(len(markets)) if markets[x] == ""]
-        endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PRICE"]
+        endIndexes = [x for x in range(len(markets)) if "AVERAGE PRICE".lower() in markets[x].lower()]
         for x in startIndexes:
-            if x-1 in startIndexes:
-                startIndexes.remove(x-1)
+            if x+1 in startIndexes:
+                startIndexes.remove(x+1)
+            if x+2 in startIndexes:
+                startIndexes.remove(x+2)
+            if (startIndexes[len(startIndexes) -1] - startIndexes[len(startIndexes) - 2] == 1) or (startIndexes[len(startIndexes) -1] - startIndexes[len(startIndexes) - 2] == 2) or (startIndexes[len(startIndexes) -1] - startIndexes[len(startIndexes) - 2] == 3) :
+                startIndexes.pop()
         startIndexes.pop()
 
     print(startIndexes)
     print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
     for x in range(len(startIndexes)) :
-        cIndex = startIndexes[x] - 1
+        if "unnamed".lower() in markets[0].lower():
+            cIndex = startIndexes[x] + 2
+        else:
+            cIndex = startIndexes[x] - 1
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
-        #print(cropName)
 
         #replace the crop name from the excel sheet with the id name from dhis2
         for i, crop in enumerate(crops, start=0):
@@ -196,7 +204,7 @@ def reStructure(path) :
 
         startIndexes[x] = startIndexes[x] + 2
         startAdd = "A" + str(startIndexes[x])
-        endAdd = "E" + str(endIndexes[x])
+        endAdd = alphabet[len(weeksArray)] + str(endIndexes[x])
 
         addRange = startAdd + ":" + endAdd
 
@@ -223,9 +231,6 @@ def reStructure(path) :
     # create a black db
     db = xl.Database()
 
-    #create the array to hold our sheets
-    weekArray = sheetDictionary[0][0][1:]
-
     #separating individual column lists from the extracted bulky list
     orgUnits = []
     cropList = []
@@ -240,6 +245,18 @@ def reStructure(path) :
                 cropList.append("")
             else:
                 cropList.append(sheetDictionary[x][0][0])
+
+    print(sheetDictionary)
+    print(cropList)
+    print(valueList)
+    print(orgUnits)
+
+    # create the array to hold our sheets
+    weekArray = []
+    for x in range(len(valueList[0])) :
+        weekArray.append("WK" + str(x+1))
+    print(weekArray)
+    print(weeksArray)
 
     # iterate through every sheet to be created in the document
     for num, week in enumerate(weekArray) :
