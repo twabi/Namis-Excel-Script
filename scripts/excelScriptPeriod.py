@@ -119,8 +119,15 @@ if month_number == "":
 #removing the extension from the file path
 filePath = filename.replace(fileName[last], "")
 
-print(month_number)
+print(month_number, year_number[0])
 weekNumberArray = weeks(int(year_number[0]), int(month_number))
+if len(weekNumberArray) == 0:
+    tempArray = []
+    array2 = weeks(int(year_number[0]), int(month_number)-1)
+    for x in range(52 - array2[len(array2) -1]):
+        tempArray.append(array2[len(array2) -1] + (x+1))
+    weekNumberArray = tempArray
+
 prevArray=[]
 
 for d in weekNumberArray:
@@ -174,8 +181,8 @@ def reStructure(path) :
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
 
     if (len(startIndexes) == 0) and (len(endIndexes) == 0) :
-        startIndexes = [x for x in range(len(markets)) if markets[x] == ""]
-        endIndexes = [x for x in range(len(markets)) if "AVERAGE PRICE".lower() in markets[x].lower()]
+        startIndexes = [x for x in range(len(markets)) if (markets[x] == "" or markets[x] == " ")]
+        endIndexes = [x for x in range(len(markets)) if "AVERAGE PRICE" in markets[x]]
         for x in startIndexes:
             if x+1 in startIndexes:
                 startIndexes.remove(x+1)
@@ -189,12 +196,26 @@ def reStructure(path) :
     print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
     for x in range(len(startIndexes)) :
+        list_number = endIndexes[5] - startIndexes[5]
         if "unnamed".lower() in markets[0].lower():
             cIndex = startIndexes[x] + 2
+        elif "this year".lower() in markets[0].lower():
+            cIndex = startIndexes[x] + 3
         else:
             cIndex = startIndexes[x] - 1
+
+        if cIndex == 6:
+            cIndex = cIndex -1
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        if cropName == "" or cropName == " ":
+            cropAdd = "A" + str(cIndex+1)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+            if cropName == "" or cropName == " ":
+                cropAdd = "A" + str(cIndex + 2)
+                cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+
+        print(cropName)
 
         #replace the crop name from the excel sheet with the id name from dhis2
         for i, crop in enumerate(crops, start=0):
@@ -207,9 +228,11 @@ def reStructure(path) :
         endAdd = alphabet[len(weeksArray)] + str(endIndexes[x])
 
         addRange = startAdd + ":" + endAdd
+        #print(addRange)
 
         #replace the market names from the excel file selected with the ids from the dhis2 marketIDs list
         crops2 = md.ws(ws='Sheet1').range(address=addRange, formula=False)
+        #print("empty?", crops2)
         for index, data in enumerate(crops2, start=2):
             for i, marketName in enumerate(marketNames):
                 if marketName.lower() == data[0].lower() or (marketName.lower() in data[0].lower()) or (
