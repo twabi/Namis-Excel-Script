@@ -182,7 +182,7 @@ def reStructure(path) :
 
     if (len(startIndexes) == 0) and (len(endIndexes) == 0) :
         startIndexes = [x for x in range(len(markets)) if (markets[x] == "" or markets[x] == " ")]
-        endIndexes = [x for x in range(len(markets)) if "AVERAGE PRICE" in markets[x]]
+        endIndexes = [x for x in range(len(markets)) if "AVERAGE PRICE" in str(markets[x])]
         for x in startIndexes:
             if x+1 in startIndexes:
                 startIndexes.remove(x+1)
@@ -196,7 +196,6 @@ def reStructure(path) :
     print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
     for x in range(len(startIndexes)) :
-        list_number = endIndexes[5] - startIndexes[5]
         if "unnamed".lower() in markets[0].lower():
             cIndex = startIndexes[x] + 2
         elif "this year".lower() in markets[0].lower():
@@ -233,11 +232,11 @@ def reStructure(path) :
         #replace the market names from the excel file selected with the ids from the dhis2 marketIDs list
         crops2 = md.ws(ws='Sheet1').range(address=addRange, formula=False)
         #print("empty?", crops2)
-        for index, data in enumerate(crops2, start=2):
+        for index, datum in enumerate(crops2, start=2):
             for i, marketName in enumerate(marketNames):
-                if marketName.lower() == data[0].lower() or (marketName.lower() in data[0].lower()) or (
-                        data[0].lower() in marketName.lower()):
-                    data[0] = marketIDs[i]
+                if marketName.lower() == datum[0].lower() or (marketName.lower() in datum[0].lower()) or (
+                        datum[0].lower() in marketName.lower()):
+                    datum[0] = marketIDs[i]
 
         crops2[0][0] = cropName
 
@@ -287,24 +286,24 @@ def reStructure(path) :
         db.add_ws(ws=week)
 
         #loop through the crops list to add to the crops column
-        for row_id, data in enumerate(cropList, start=2) :
-            db.ws(ws=week).update_index(row=row_id, col=1, val=data)
+        for row_id, datum in enumerate(cropList, start=2) :
+            db.ws(ws=week).update_index(row=row_id, col=1, val=datum)
 
         # loop through the crops list to add to the crops column
         for row_id, wk in enumerate(cropList, start=2):
             db.ws(ws=week).update_index(row=row_id, col=2, val=weeksArray[num])
 
         #loop through the markets list to add to the org units column
-        for row_id, data in enumerate(orgUnits, start=2) :
-            db.ws(ws=week).update_index(row=row_id, col=3, val=data)
+        for row_id, datum in enumerate(orgUnits, start=2) :
+            db.ws(ws=week).update_index(row=row_id, col=3, val=datum)
 
         #for each values in the sheet, add respective values to the values column
-        for row_id, data in enumerate(valueList, start=2) :
-            db.ws(ws=week).update_index(row=row_id, col=4, val=data[num])
+        for row_id, datum in enumerate(valueList, start=2) :
+            db.ws(ws=week).update_index(row=row_id, col=4, val=datum[num])
 
         # write the column headers to the excel sheet
-        for col_id, data in enumerate(columnHeader, start=1):
-            db.ws(ws=week).update_index(row=1, col=col_id, val=data)
+        for col_id, datum in enumerate(columnHeader, start=1):
+            db.ws(ws=week).update_index(row=1, col=col_id, val=datum)
 
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
