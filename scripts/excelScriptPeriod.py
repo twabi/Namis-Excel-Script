@@ -38,63 +38,6 @@ newFileName = "New-"+ name
 #dateYear = ""
 #monthNumber = ""
 
-#okay so this big if statement is doing one thing, and that is modify the document name inorder to parse
-# the date on the name. So that means changing "WK" prefix in the name to remain with the parseable date value
-'''
-if "WK" in name:
-    if "WK " in name:
-        # i replace the prefix here, with nothing
-        dateName = name.replace("WK ", "")
-        # i check if the name has a weird month name in this case, a full month name, coz the time will be parsed differently in that case
-        if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-            # parse the datetime
-            dt = datetime.datetime.strptime(dateName, '%B %Y')
-        elif "APRI".lower() in name.lower():
-            # one of the files has a weird month name, neither full nor shorthand, so i convert this to shorthand then parse it
-            dateName = dateName.replace("APRI", "APR")
-            dt = datetime.datetime.strptime(dateName, '%b %Y')  # parse the datetime
-        else:
-            dt = datetime.datetime.strptime(dateName, '%b %Y')  # parse the datetime
-
-        if dt.year > 2000:
-            dt = dt.replace(year=dt.year - 100)
-        dateYear = dt.strftime('%Y')
-        monthNumber = dt.strftime("%m")
-    else:
-        dateName = name.replace("WK", "")
-        if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-            dt = datetime.datetime.strptime(dateName, '%B%y')
-        elif "APRI".lower() in name.lower():
-            dateName = dateName.replace("APRI", "APR")
-            dt = datetime.datetime.strptime(dateName, '%b%Y')
-        else:
-            dt = datetime.datetime.strptime(dateName, '%b%y')
-        if dt.year > 2000:
-            dt = dt.replace(year=dt.year - 100)
-        dateYear = dt.strftime('%Y')
-        monthNumber = dt.strftime("%m")
-elif "wk " in name:
-    dateName = name.replace("wk ", "")
-    if ("JUNE".lower() in name.lower()) or ("JULY".lower() in name.lower()):
-        dt = datetime.datetime.strptime(dateName, '%B %Y')
-    elif "APRI".lower() in name.lower():
-        dateName = dateName.replace("APRI", "APR")
-        dt = datetime.datetime.strptime(dateName, '%b %Y')
-    else:
-        dt = datetime.datetime.strptime(dateName, '%b %Y')
-
-    if dt.year > 2000:
-        dt = dt.replace(year=dt.year - 100)
-    dateYear = dt.strftime('%Y')
-    monthNumber = dt.strftime("%m")
-else :
-    dateName = name
-    dt = datetime.datetime.strptime(dateName, '%B%Y')
-    if dt.year > 2000:
-        dt = dt.replace(year=dt.year - 100)
-    dateYear = dt.strftime('%Y')
-    monthNumber = dt.strftime("%m")
-'''
 months_short = []
 for i in range(1,13):
     months_short.append((i, datetime.date(2008, i, 1).strftime('%b')))
@@ -143,6 +86,8 @@ for x in range(len(weekNumberArray)):
 print(weeksArray)
 
 def reStructure(path) :
+    weird_document = False
+    start_letter = "A"
     #read the excel file from dhis2 with market names and their ids
     db = xl.readcsv(fn="DHIS2_Markets.csv", delimiter=',')
     #read the excel file from dhis2 with crop names and their respective ids
@@ -174,7 +119,14 @@ def reStructure(path) :
 
     #get the first column from the file with all the markets
     markets = md.ws(ws='Sheet1').col(col=1)
+    #print(markets)
+    if "ADD" in markets:
+        markets = md.ws(ws='Sheet1').col(col=3)
+        weird_document = True
     print(markets)
+    print(weird_document)
+    if weird_document:
+        start_letter = "C"
 
     #create an array of indexes based on a key word present in the excel file
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
@@ -192,6 +144,9 @@ def reStructure(path) :
                 startIndexes.pop()
         startIndexes.pop()
 
+    if "Unnamed: 2" in markets:
+        startIndexes[0] = startIndexes[0]+2
+
     print(startIndexes)
     print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
@@ -205,26 +160,30 @@ def reStructure(path) :
 
         if cIndex == 6:
             cIndex = cIndex -1
-        cropAdd = "A" + str(cIndex)
+        cropAdd = start_letter + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
         if cropName == "" or cropName == " ":
-            cropAdd = "A" + str(cIndex+1)
+            cropAdd = start_letter + str(cIndex+1)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
             if cropName == "" or cropName == " ":
-                cropAdd = "A" + str(cIndex + 2)
+                cropAdd = start_letter + str(cIndex + 2)
                 cropName = md.ws(ws='Sheet1').address(address=cropAdd)
 
-        print(cropName)
+        print(cropName, cIndex)
 
         #replace the crop name from the excel sheet with the id name from dhis2
         for i, crop in enumerate(crops, start=0):
-            if cropName.lower() == crop.lower() or (cropName.lower() in crop.lower()) or (
-                    crop.lower() in cropName.lower()):
+            if str(cropName).lower() == str(crop).lower() or (str(cropName).lower() in str(crop).lower()) or (
+                    str(crop).lower() in str(cropName).lower()):
                 cropName = cropsIDs[i]
 
+        end_letter = alphabet[len(weeksArray)]
+        if weird_document:
+            end_letter = alphabet[len(weeksArray) + 2]
+
         startIndexes[x] = startIndexes[x] + 2
-        startAdd = "A" + str(startIndexes[x])
-        endAdd = alphabet[len(weeksArray)] + str(endIndexes[x])
+        startAdd = start_letter + str(startIndexes[x])
+        endAdd = end_letter + str(endIndexes[x])
 
         addRange = startAdd + ":" + endAdd
         #print(addRange)
@@ -234,8 +193,8 @@ def reStructure(path) :
         #print("empty?", crops2)
         for index, datum in enumerate(crops2, start=2):
             for i, marketName in enumerate(marketNames):
-                if marketName.lower() == datum[0].lower() or (marketName.lower() in datum[0].lower()) or (
-                        datum[0].lower() in marketName.lower()):
+                if str(marketName).lower() == str(datum[0]).lower() or (str(marketName).lower() in str(datum[0]).lower()) or (
+                        str(datum[0]).lower() in str(marketName).lower()):
                     datum[0] = marketIDs[i]
 
         crops2[0][0] = cropName
