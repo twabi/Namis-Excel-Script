@@ -310,20 +310,34 @@ def reStructure(path) :
     print(editedFileName)
     #xl.writexl(db=db, fn=editedFileName)
 
+
+
+
 if filename.lower().endswith('.csv'):
-    reStructure(filename)
+    db = pd.read_csv(filename)
+    document_length = len(db)
+    print(document_length)
+    if document_length > 10000:
+        print("Document too long! please remove excess rows in the document then try again", file=sys.stderr)
+    else:
+        reStructure(filename)
 
 elif filename.lower().endswith('.xls') :
+    db = pd.read_excel(filename)
+    document_length = len(db)
+    print(document_length)
+    if document_length > 10000:
+        print("Document too long! please remove excess rows in the document then try again", file=sys.stderr)
+    else:
+        # Read and store content of an excel file
+        read_file = pd.read_excel(filename)
 
-    # Read and store content of an excel file
-    read_file = pd.read_excel(filename)
-
-    # Write the dataframe object into csv file
-    newPath = filePath +  "{}.csv".format(name)
-    read_file.to_csv(newPath,
-                     index=None,
-                     header=True)
-    reStructure(newPath)
+        # Write the dataframe object into csv file
+        newPath = filePath +  "{}.csv".format(name)
+        read_file.to_csv(newPath,
+                         index=None,
+                         header=True)
+        reStructure(newPath)
 
 else:
     print("invalid file format", file=sys.stderr)
