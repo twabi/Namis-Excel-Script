@@ -147,6 +147,10 @@ def reStructure(path) :
     if "Unnamed: 2" in markets:
         startIndexes[0] = startIndexes[0]+2
 
+    cutoff = len(endIndexes)
+    print(cutoff)
+    overboard = len(startIndexes)
+    startIndexes = startIndexes[0:cutoff]
     print(startIndexes)
     print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
@@ -158,8 +162,12 @@ def reStructure(path) :
         else:
             cIndex = startIndexes[x] - 1
 
-        if cIndex == 6:
-            cIndex = cIndex -1
+        if markets[0] == "Unnamed: 2" :
+            if cIndex == 5:
+                cIndex = cIndex + 1
+        else:
+            if cIndex == 6:
+                cIndex = cIndex -1
         cropAdd = start_letter + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
         if cropName == "" or cropName == " ":
@@ -269,34 +277,32 @@ def reStructure(path) :
     print(editedFileName)
     #xl.writexl(db=db, fn=editedFileName)
 
-
-
+def delete_excess_rows(path):
+    db = pd.read_csv(path)
+    document_length = len(db)
+    print(document_length)
+    thresh = 2000
+    if document_length > thresh:
+        print("Document too long! removing excess rows...")
+        dp = pd.read_csv(path, skipfooter=document_length - thresh, engine='python')
+        dp.to_csv(path, index=False)
+        reStructure(path)
+    else:
+        reStructure(path)
 
 if filename.lower().endswith('.csv'):
-    db = pd.read_csv(filename)
-    document_length = len(db)
-    print(document_length)
-    if document_length > 10000:
-        print("Document too long! please remove excess rows in the document then try again", file=sys.stderr)
-    else:
-        reStructure(filename)
+    delete_excess_rows(filename)
 
 elif filename.lower().endswith('.xls') :
-    db = pd.read_excel(filename)
-    document_length = len(db)
-    print(document_length)
-    if document_length > 10000:
-        print("Document too long! please remove excess rows in the document then try again", file=sys.stderr)
-    else:
-        # Read and store content of an excel file
-        read_file = pd.read_excel(filename)
+    # Read and store content of an excel file
+    read_file = pd.read_excel(filename)
 
-        # Write the dataframe object into csv file
-        newPath = filePath +  "{}.csv".format(name)
-        read_file.to_csv(newPath,
-                         index=None,
-                         header=True)
-        reStructure(newPath)
+    # Write the dataframe object into csv file
+    newPath = filePath + "{}.csv".format(name)
+    read_file.to_csv(newPath,
+                     index=None,
+                     header=True)
+    delete_excess_rows(newPath)
 
 else:
     print("invalid file format", file=sys.stderr)
