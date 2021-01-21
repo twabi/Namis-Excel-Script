@@ -7,6 +7,10 @@ import datetime
 import datetime as gt
 import re
 import string
+import requests
+from requests.auth import HTTPBasicAuth
+# api-endpoint
+url = "https://covmw.com/namistest/api/dataSets/tBglAG7ASSg.json?fields=dataSetElements[dataElement[id,name,formName]]"
 
 alphabet = string.ascii_uppercase
 def weeks(year, month):
@@ -91,15 +95,24 @@ def reStructure(path) :
     #read the excel file from dhis2 with market names and their ids
     db = xl.readcsv(fn="DHIS2_Markets.csv", delimiter=',')
     #read the excel file from dhis2 with crop names and their respective ids
-    cropsDb = xl.readcsv(fn="dhis2_crops - Sheet1.csv", delimiter=',')
+    # extracting data in json format
+    res = requests.get(url, verify=False, auth=HTTPBasicAuth('ahmed', 'Atwabi@20'))
+    #print(res)
+    apiData = res.json()
+    elementArray = apiData["dataSetElements"]
+    formNameArray = []
+    idArray = []
+    for element in elementArray:
+        formNameArray.append(element['dataElement']['formName'])
+        idArray.append(element['dataElement']['id'])
 
     #get the market name and its respective id list from the dhis2 excel sheet
     marketIDs = db.ws(ws='Sheet1').col(col=1)
     marketNames = db.ws(ws='Sheet1').col(col=2)
 
     # get the crop name and its respective id list from the dhis2 excel sheet
-    crops = cropsDb.ws(ws='Sheet1').col(col=2)
-    cropsIDs = cropsDb.ws(ws='Sheet1').col(col=1)
+    crops = formNameArray
+    cropsIDs = idArray
 
     #remove the column headers from the crop and orgUnits lists
     marketNames.pop(0)
@@ -215,7 +228,7 @@ def reStructure(path) :
         sheet.pop(1)
 
     # take this list for example as our input data that we want to put in column A
-    columnHeader = ["Crop", "Period", "Org Unit", "Value"]
+    columnHeader = ["Livestock", "Period", "Org Unit", "Value"]
 
     # create a black db
     db = xl.Database()
