@@ -6,6 +6,7 @@ import pandas as pd
 import datetime
 import datetime as gt
 import re
+from fuzzywuzzy import fuzz
 import string
 
 alphabet = string.ascii_uppercase
@@ -181,8 +182,9 @@ def reStructure(path) :
 
         #replace the crop name from the excel sheet with the id name from dhis2
         for i, crop in enumerate(crops, start=0):
-            if str(cropName).lower() == str(crop).lower() or (str(cropName).lower() in str(crop).lower()) or (
-                    str(crop).lower() in str(cropName).lower()):
+            partial = fuzz.partial_ratio(str(cropName), str(crop))
+            tokenSort = fuzz.token_sort_ratio(str(cropName), str(crop))
+            if (partial > 60) or (tokenSort > 60):
                 cropName = cropsIDs[i]
 
         end_letter = alphabet[len(weeksArray)]
@@ -201,8 +203,9 @@ def reStructure(path) :
         #print("empty?", crops2)
         for index, datum in enumerate(crops2, start=2):
             for i, marketName in enumerate(marketNames):
-                if str(marketName).lower() == str(datum[0]).lower() or (str(marketName).lower() in str(datum[0]).lower()) or (
-                        str(datum[0]).lower() in str(marketName).lower()):
+                partial = fuzz.partial_ratio(str(marketName), str(datum[0]))
+                tokenSort = fuzz.token_sort_ratio(str(marketName), str(datum[0]))
+                if (partial > 60) or (tokenSort > 60):
                     datum[0] = marketIDs[i]
 
         crops2[0][0] = cropName
