@@ -52,6 +52,12 @@ for i in range(1,13):
 
 year_number = re.findall(r'\d+', name)
 
+if len(year_number[0]) < 3:
+    dt = datetime.datetime.strptime(year_number[0], '%y')
+    if dt.year > 2000:
+        dt = dt.replace(year=dt.year - 100)
+    year_number[0] = dt.strftime('%Y')
+
 month_number = ""
 for data in months_choices:
     if data[1].lower() in name.lower():
