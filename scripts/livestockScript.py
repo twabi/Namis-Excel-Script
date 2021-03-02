@@ -182,20 +182,34 @@ def reStructure(path) :
         else:
             cIndex = startIndexes[x] - 1
 
-        if markets[0] == "Unnamed: 2" :
-            if cIndex == 5:
-                cIndex = cIndex + 1
-        else:
-            if cIndex == 6:
-                cIndex = cIndex -1
+
         cropAdd = start_letter + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        if (cIndex == 5) and (cropName == "" or cropName == " "):
+            cIndex = cIndex + 1
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        elif(cIndex == 6) and (cropName == "" or cropName == " "):
+            cIndex = cIndex - 1
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+
         if cropName == "" or cropName == " ":
-            cropAdd = start_letter + str(cIndex+1)
+            cIndex = cIndex + 1
+            cropAdd = start_letter + str(cIndex)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
             if cropName == "" or cropName == " ":
-                cropAdd = start_letter + str(cIndex + 2)
+                cIndex = cIndex + 2
+                cropAdd = start_letter + str(cIndex)
                 cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        elif cropName == "NSAWAWA":
+            cIndex = cIndex + 1
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        elif cropName == "NTHALIRE":
+            cIndex = cIndex - 2
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
 
         print(cropName, cIndex)
 
@@ -211,7 +225,7 @@ def reStructure(path) :
         if weird_document:
             end_letter = alphabet[len(weeksArray) + 2]
 
-        startIndexes[x] = startIndexes[x] + 2
+        startIndexes[x] = cIndex
         startAdd = start_letter + str(startIndexes[x])
         endAdd = end_letter + str(endIndexes[x])
 
@@ -234,12 +248,13 @@ def reStructure(path) :
         # add it to the global array variable to be used later in the writing the new excel file
         sheetDictionary.append(crops2)
 
+    print(sheetDictionary)
     #removing an overflowing element from the markets list
-    for sheet in sheetDictionary:
-        sheet.pop(1)
+    #for sheet in sheetDictionary:
+        #sheet.pop(1)
 
     # take this list for example as our input data that we want to put in column A
-    columnHeader = ["Livestock", "Period", "Org Unit", "Value"]
+    columnHeader = ["Data Element", "Period", "Org Unit", "Value"]
 
     # create a black db
     db = xl.Database()
@@ -249,6 +264,7 @@ def reStructure(path) :
     cropList = []
     valueList = []
     for x in range(len(sheetDictionary)):
+        print(sheetDictionary[x][1:])
         for y in sheetDictionary[x][1:] :
             valueList.append(y[1:])
             orgUnits.append(y[0])
