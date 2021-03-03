@@ -109,6 +109,9 @@ def reStructure(path) :
     elementArray = apiData["dataSetElements"]
     formNameArray = []
     idArray = []
+    cropDict = []
+    for k in range(len(elementArray)):
+        cropDict.append({'name': elementArray[k]['dataElement']['formName'], 'id': elementArray[k]['dataElement']['id']})
     for element in elementArray:
         formNameArray.append(element['dataElement']['formName'])
         idArray.append(element['dataElement']['id'])
@@ -120,6 +123,8 @@ def reStructure(path) :
     # get the crop name and its respective id list from the dhis2 excel sheet
     crops = formNameArray
     cropsIDs = idArray
+
+    print(cropDict)
 
     #remove the column headers from the crop and orgUnits lists
     marketNames.pop(0)
@@ -211,14 +216,15 @@ def reStructure(path) :
             cropAdd = start_letter + str(cIndex)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
 
-        print(cropName, cIndex)
+        #print(cropName, cIndex)
 
         #replace the crop name from the excel sheet with the id name from dhis2
-        for i, crop in enumerate(crops, start=0):
-            partial = fuzz.partial_ratio(str(cropName), str(crop))
-            tokenSort = fuzz.token_sort_ratio(str(cropName), str(crop))
-            if (partial > 60) or (tokenSort > 60):
-                cropName = cropsIDs[i]
+        for i, crop in enumerate(cropDict, start=0):
+            partial = fuzz.partial_ratio(str(cropName), str(crop["name"]))
+            tokenSort = fuzz.token_sort_ratio(str(cropName), str(crop["name"]))
+            #print(cropName, crop["name"])
+            #if (partial > 60) or (tokenSort > 60):
+                #cropName = crop["id"]
 
 
         end_letter = alphabet[len(weeksArray)]
@@ -235,6 +241,7 @@ def reStructure(path) :
         #replace the market names from the excel file selected with the ids from the dhis2 marketIDs list
         crops2 = md.ws(ws='Sheet1').range(address=addRange, formula=False)
         #print("empty?", crops2)
+        #print(crops2)
         for index, datum in enumerate(crops2, start=2):
             for i, marketName in enumerate(marketNames):
                 partial = fuzz.partial_ratio(str(marketName), str(datum[0]))
@@ -248,7 +255,7 @@ def reStructure(path) :
         # add it to the global array variable to be used later in the writing the new excel file
         sheetDictionary.append(crops2)
 
-    print(sheetDictionary)
+    #print(sheetDictionary)
     #removing an overflowing element from the markets list
     #for sheet in sheetDictionary:
         #sheet.pop(1)
@@ -264,7 +271,7 @@ def reStructure(path) :
     cropList = []
     valueList = []
     for x in range(len(sheetDictionary)):
-        print(sheetDictionary[x][1:])
+        #print(sheetDictionary[x][1:])
         for y in sheetDictionary[x][1:] :
             valueList.append(y[1:])
             orgUnits.append(y[0])
@@ -275,17 +282,32 @@ def reStructure(path) :
             else:
                 cropList.append(sheetDictionary[x][0][0])
 
-    print(sheetDictionary)
+    #print(sheetDictionary)
     print(cropList)
     print(valueList)
     print(orgUnits)
+
+    #for i, crop in enumerate(cropDict, start=0):
+        #for j in range(len(cropList)):
+            #partial = fuzz.partial_ratio(str(cropList[j]), str(crop["name"]))
+            #tokenSort = fuzz.token_sort_ratio(str(cropList[j]), str(crop["name"]))
+            #ratio  = fuzz.ratio(str(cropList[j]).lower(), str(crop["name"]).lower())
+            #print(ratio)
+            #print(cropList[j], crop["name"])
+            #if ratio > 60:
+                #print(ratio)
+                #print(cropList[j], crop["name"])
+                #cropList[j] = crop["id"]
+    list_contains(cropList, cropDict)
+
+    print(cropList)
 
     # create the array to hold our sheets
     weekArray = []
     for x in range(len(valueList[0])) :
         weekArray.append("WK" + str(x+1))
-    print(weekArray)
-    print(weeksArray)
+    #print(weekArray)
+    #print(weeksArray)
 
     # iterate through every sheet to be created in the document
     for num, week in enumerate(weekArray) :
@@ -316,6 +338,23 @@ def reStructure(path) :
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
     xl.writexl(db=db, fn=editedFileName)
+
+
+def list_contains(List1, objectList):
+    # Iterate in the 1st list
+    for m in range(len(List1)):
+        # Iterate in the 2nd list
+        for n in objectList:
+            # if there is a match
+            ratio = fuzz.ratio(str(List1[m]).lower(), str(n["name"]).lower())
+            partial = fuzz.partial_ratio(str(List1[m]).lower(), str(n["name"]))
+            tokenSort = fuzz.token_sort_ratio(str(List1[m]).lower(), str(n["name"]))
+
+            if ratio > 90 and partial > 70 and tokenSort > 70:
+                #print(List1[m].lower(), n["name"].lower())
+                #print(ratio)
+                List1[m] = n["id"]
+
 
 def delete_excess_rows(path):
     db = pd.read_csv(path)
