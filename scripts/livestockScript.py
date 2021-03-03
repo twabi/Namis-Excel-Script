@@ -7,6 +7,7 @@ import datetime
 import datetime as gt
 import re
 import string
+import os
 from fuzzywuzzy import fuzz
 import requests
 from requests.auth import HTTPBasicAuth
@@ -366,8 +367,16 @@ def delete_excess_rows(path):
         dp = pd.read_csv(path, skipfooter=document_length - thresh, engine='python')
         dp.to_csv(path, index=False)
         reStructure(path)
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            print("The file does not exist")
     else:
         reStructure(path)
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            print("The file does not exist")
 
 if filename.lower().endswith('.csv'):
     delete_excess_rows(filename)
