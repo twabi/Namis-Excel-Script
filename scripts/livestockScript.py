@@ -179,6 +179,17 @@ def reStructure(path) :
     startIndexes = startIndexes[0:cutoff]
     print(startIndexes)
     print(endIndexes)
+
+    if startIndexes[0] == 1:
+        print("this is true")
+        for x in range(len(startIndexes)):
+            cIndex = startIndexes[x]
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+            #print(cropName, cIndex)
+            if (" " in cropName) or (cropName == "AVERAGE PRICE"):
+                startIndexes[x] = startIndexes[x] + 2
+
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
     for x in range(len(startIndexes)) :
         if "unnamed".lower() in markets[0].lower():
@@ -187,7 +198,6 @@ def reStructure(path) :
             cIndex = startIndexes[x] + 3
         else:
             cIndex = startIndexes[x] - 1
-
 
         cropAdd = start_letter + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
@@ -200,7 +210,7 @@ def reStructure(path) :
             cropAdd = start_letter + str(cIndex)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
 
-        if cropName == "" or cropName == " ":
+        if cropName == "" or cropName == " " :
             cIndex = cIndex + 1
             cropAdd = start_letter + str(cIndex)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
@@ -208,7 +218,7 @@ def reStructure(path) :
                 cIndex = cIndex + 2
                 cropAdd = start_letter + str(cIndex)
                 cropName = md.ws(ws='Sheet1').address(address=cropAdd)
-        elif cropName == "NSAWAWA":
+        elif "NSAWAWA" == cropName:
             cIndex = cIndex + 1
             cropAdd = start_letter + str(cIndex)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
@@ -216,8 +226,23 @@ def reStructure(path) :
             cIndex = cIndex - 2
             cropAdd = start_letter + str(cIndex)
             cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        elif "Start Date: " == cropName:
+            cIndex = cIndex + 1
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+        if cropName == "NSAWAWA" :
+            cIndex = cIndex + 1
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+            #print(cropName)
+        if cropName == "Start Date: ":
+            cIndex = cIndex + 2
+            cropAdd = start_letter + str(cIndex)
+            cropName = md.ws(ws='Sheet1').address(address=cropAdd)
+            #print(cropName)
 
-        #print(cropName, cIndex)
+        print(cropName, cIndex)
+
 
         #replace the crop name from the excel sheet with the id name from dhis2
         for i, crop in enumerate(cropDict, start=0):
@@ -287,20 +312,8 @@ def reStructure(path) :
     print(cropList)
     print(valueList)
     print(orgUnits)
-
-    #for i, crop in enumerate(cropDict, start=0):
-        #for j in range(len(cropList)):
-            #partial = fuzz.partial_ratio(str(cropList[j]), str(crop["name"]))
-            #tokenSort = fuzz.token_sort_ratio(str(cropList[j]), str(crop["name"]))
-            #ratio  = fuzz.ratio(str(cropList[j]).lower(), str(crop["name"]).lower())
-            #print(ratio)
-            #print(cropList[j], crop["name"])
-            #if ratio > 60:
-                #print(ratio)
-                #print(cropList[j], crop["name"])
-                #cropList[j] = crop["id"]
     list_contains(cropList, cropDict)
-
+    print(" ")
     print(cropList)
 
     # create the array to hold our sheets
@@ -338,7 +351,7 @@ def reStructure(path) :
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
-    xl.writexl(db=db, fn=editedFileName)
+    #xl.writexl(db=db, fn=editedFileName)
 
 
 def list_contains(List1, objectList):
@@ -367,16 +380,16 @@ def delete_excess_rows(path):
         dp = pd.read_csv(path, skipfooter=document_length - thresh, engine='python')
         dp.to_csv(path, index=False)
         reStructure(path)
-        if os.path.exists(path):
-            os.remove(path)
-        else:
-            print("The file does not exist")
+        #if os.path.exists(path):
+            #os.remove(path)
+        #else:
+            #print("The file does not exist")
     else:
         reStructure(path)
-        if os.path.exists(path):
-            os.remove(path)
-        else:
-            print("The file does not exist")
+        #if os.path.exists(path):
+            #os.remove(path)
+        #else:
+            #print("The file does not exist")
 
 if filename.lower().endswith('.csv'):
     delete_excess_rows(filename)
