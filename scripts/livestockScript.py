@@ -111,8 +111,8 @@ def reStructure(path) :
     #print(res)
     apiData = res.json()
     elementArray = apiData["dataSetElements"]
-    formNameArray = []
-    idArray = []
+    #formNameArray = []
+    #idArray = []
     cropDict = []
     for k in range(len(elementArray)):
         cropDict.append(
@@ -127,31 +127,29 @@ def reStructure(path) :
             {'name': elementArray2[k]['name'].replace(" Market", ""), 'id': elementArray2[k]['id']})
 
 
-    for element in elementArray:
-        formNameArray.append(element['dataElement']['formName'])
-        idArray.append(element['dataElement']['id'])
+    #for element in elementArray:
+        #formNameArray.append(element['dataElement']['formName'])
+        #idArray.append(element['dataElement']['id'])
 
     #get the market name and its respective id list from the dhis2 excel sheet
-    marketIDs = db.ws(ws='Sheet1').col(col=1)
-    marketNames = db.ws(ws='Sheet1').col(col=2)
-
-
+    #marketIDs = db.ws(ws='Sheet1').col(col=1)
+    #marketNames = db.ws(ws='Sheet1').col(col=2)
 
     # get the crop name and its respective id list from the dhis2 excel sheet
-    crops = formNameArray
-    cropsIDs = idArray
+    #crops = formNameArray
+    #cropsIDs = idArray
 
     print(cropDict)
 
     #remove the column headers from the crop and orgUnits lists
-    marketNames.pop(0)
-    marketIDs.pop(0)
-    crops.pop(0)
-    cropsIDs.pop(0)
+    #marketNames.pop(0)
+    #marketIDs.pop(0)
+    #crops.pop(0)
+    #cropsIDs.pop(0)
 
     #remove the suffix of the market names in the list from "soso market" to just "soso"
-    for x in range(len(marketNames)):
-        marketNames[x] = marketNames[x].replace(" Market", "")
+    #for x in range(len(marketNames)):
+        #marketNames[x] = marketNames[x].replace(" Market", "")
 
     #read the excel file
     md = xl.readcsv(fn=path, delimiter=',')
@@ -259,16 +257,6 @@ def reStructure(path) :
 
         print(cropName, cIndex)
 
-
-        #replace the crop name from the excel sheet with the id name from dhis2
-        for i, crop in enumerate(cropDict, start=0):
-            partial = fuzz.partial_ratio(str(cropName), str(crop["name"]))
-            tokenSort = fuzz.token_sort_ratio(str(cropName), str(crop["name"]))
-            #print(cropName, crop["name"])
-            #if (partial > 60) or (tokenSort > 60):
-                #cropName = crop["id"]
-
-
         end_letter = alphabet[len(weeksArray)]
         if weird_document:
             end_letter = alphabet[len(weeksArray) + 2]
@@ -282,15 +270,6 @@ def reStructure(path) :
 
         #replace the market names from the excel file selected with the ids from the dhis2 marketIDs list
         crops2 = md.ws(ws='Sheet1').range(address=addRange, formula=False)
-        #print("empty?", crops2)
-        #print(crops2)
-        #for index, datum in enumerate(crops2, start=2):
-            #for i, marketName in enumerate(marketNames):
-                #partial = fuzz.partial_ratio(str(marketName), str(datum[0]))
-                #tokenSort = fuzz.token_sort_ratio(str(marketName), str(datum[0]))
-                #if (partial > 60) or (tokenSort > 60):
-                    #datum[0] = marketIDs[i]
-
 
         crops2[0][0] = cropName
 
@@ -368,7 +347,7 @@ def reStructure(path) :
     #write out the document finally
     editedFileName = filePath + "{}.xlsx".format(newFileName)
     print(editedFileName)
-    #xl.writexl(db=db, fn=editedFileName)
+    xl.writexl(db=db, fn=editedFileName)
 
 
 def list_contains(List1, objectList):
