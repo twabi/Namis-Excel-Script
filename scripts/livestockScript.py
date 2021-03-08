@@ -11,8 +11,10 @@ import os
 from fuzzywuzzy import fuzz
 import requests
 from requests.auth import HTTPBasicAuth
+
 # api-endpoint
 url = "https://covmw.com/namistest/api/dataSets/tBglAG7ASSg.json?fields=dataSetElements[dataElement[id,name,formName]]"
+marketsURL = "https://covmw.com/namistest/api/organisationUnitGroups/Lp9RVPodv0V.json?fields=organisationUnits[id,name]"
 
 alphabet = string.ascii_uppercase
 def weeks(year, month):
@@ -105,6 +107,7 @@ def reStructure(path) :
     #read the excel file from dhis2 with crop names and their respective ids
     # extracting data in json format
     res = requests.get(url, verify=False, auth=HTTPBasicAuth('ahmed', 'Atwabi@20'))
+    marketRes = requests.get(marketsURL, verify=False, auth=HTTPBasicAuth('ahmed', 'Atwabi@20'))
     #print(res)
     apiData = res.json()
     elementArray = apiData["dataSetElements"]
@@ -112,7 +115,18 @@ def reStructure(path) :
     idArray = []
     cropDict = []
     for k in range(len(elementArray)):
-        cropDict.append({'name': elementArray[k]['dataElement']['formName'], 'id': elementArray[k]['dataElement']['id']})
+        cropDict.append(
+            {'name': elementArray[k]['dataElement']['formName'], 'id': elementArray[k]['dataElement']['id']})
+
+    apiData2 = marketRes.json()
+    elementArray2 = apiData2["organisationUnits"]
+    marketDict = []
+    for k in range(len(elementArray2)):
+        print(elementArray2)
+        marketDict.append(
+            {'name': elementArray2[k]['name'].replace(" Market", ""), 'id': elementArray2[k]['id']})
+
+
     for element in elementArray:
         formNameArray.append(element['dataElement']['formName'])
         idArray.append(element['dataElement']['id'])
@@ -120,6 +134,8 @@ def reStructure(path) :
     #get the market name and its respective id list from the dhis2 excel sheet
     marketIDs = db.ws(ws='Sheet1').col(col=1)
     marketNames = db.ws(ws='Sheet1').col(col=2)
+
+
 
     # get the crop name and its respective id list from the dhis2 excel sheet
     crops = formNameArray
@@ -268,12 +284,12 @@ def reStructure(path) :
         crops2 = md.ws(ws='Sheet1').range(address=addRange, formula=False)
         #print("empty?", crops2)
         #print(crops2)
-        for index, datum in enumerate(crops2, start=2):
-            for i, marketName in enumerate(marketNames):
-                partial = fuzz.partial_ratio(str(marketName), str(datum[0]))
-                tokenSort = fuzz.token_sort_ratio(str(marketName), str(datum[0]))
-                if (partial > 60) or (tokenSort > 60):
-                    datum[0] = marketIDs[i]
+        #for index, datum in enumerate(crops2, start=2):
+            #for i, marketName in enumerate(marketNames):
+                #partial = fuzz.partial_ratio(str(marketName), str(datum[0]))
+                #tokenSort = fuzz.token_sort_ratio(str(marketName), str(datum[0]))
+                #if (partial > 60) or (tokenSort > 60):
+                    #datum[0] = marketIDs[i]
 
 
         crops2[0][0] = cropName
@@ -291,10 +307,8 @@ def reStructure(path) :
 
     # create a black db
     db = xl.Database()
-
-    #separating individual column lists from the extracted bulky list
-    orgUnits = []
     cropList = []
+    orgUnits = []
     valueList = []
     for x in range(len(sheetDictionary)):
         #print(sheetDictionary[x][1:])
@@ -309,12 +323,15 @@ def reStructure(path) :
                 cropList.append(sheetDictionary[x][0][0])
 
     #print(sheetDictionary)
+    print(marketDict)
     print(cropList)
     print(valueList)
     print(orgUnits)
     list_contains(cropList, cropDict)
+    orgUnits_list_contains(orgUnits, marketDict)
     print(" ")
     print(cropList)
+    print(orgUnits)
 
     # create the array to hold our sheets
     weekArray = []
@@ -369,27 +386,45 @@ def list_contains(List1, objectList):
                 #print(ratio)
                 List1[m] = n["id"]
 
+def orgUnits_list_contains(List1, objectList):
+    # Iterate in the 1st list
+    for m in range(len(List1)):
+        # Iterate in the 2nd list
+        for n in objectList:
+            # if there is a match
+            partial = fuzz.partial_ratio(str(List1[m]).lower(), str(n["name"]))
+            ratio = fuzz.ratio(str(List1[m]).lower(), str(n["name"]).lower())
+            tokenSort = fuzz.token_sort_ratio(str(List1[m]).lower(), str(n["name"]))
+
+
+            if List1[m].lower().replace(" ", "") in n["name"].lower().replace(" ", ""):
+                print(List1[m].lower(), n["name"].lower())
+                List1[m] = n["id"]
+            elif ratio > 90 and partial > 70 and tokenSort > 70:
+                print(List1[m].lower(), n["name"].lower())
+                List1[m] = n["id"]
+
 
 def delete_excess_rows(path):
     db = pd.read_csv(path)
+    thresh = 2000
     document_length = len(db)
     print(document_length)
-    thresh = 2000
     if document_length > thresh:
         print("Document too long! removing excess rows...")
         dp = pd.read_csv(path, skipfooter=document_length - thresh, engine='python')
         dp.to_csv(path, index=False)
         reStructure(path)
-        #if os.path.exists(path):
-            #os.remove(path)
-        #else:
-            #print("The file does not exist")
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            print("The file does not exist")
     else:
         reStructure(path)
-        #if os.path.exists(path):
-            #os.remove(path)
-        #else:
-            #print("The file does not exist")
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            print("The file does not exist")
 
 if filename.lower().endswith('.csv'):
     delete_excess_rows(filename)
