@@ -262,7 +262,7 @@ def reStructure(path) :
         #sheet.pop(1)
 
     # take this list for example as our input data that we want to put in column A
-    columnHeader = ["Data Element", "Period", "Org Unit", "Value"]
+    columnHeader = ["dataelement", "period", "orgunit", "value"]
 
     # create a black db
     db = xl.Database()
