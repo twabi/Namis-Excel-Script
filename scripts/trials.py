@@ -6,6 +6,7 @@ import pandas as pd
 import datetime
 from fuzzywuzzy import fuzz
 import numpy as np
+from fuzzywuzzy import process
 
 Tk().withdraw()  # we don't want a full GUI, so keep the root window from appearing
 filename = askopenfilename()  # show an "Open" dialog box and return the path to the selected file
@@ -31,6 +32,17 @@ def change_date(x):
   newDateFormat = str(dt.year) + str(dt.month) + str(dt.day)
   return newDateFormat
 
+def get_ratio(row):
+    name = row['reporting unit']
+    average = 0
+    for orgName in orgUnits:
+        partial = fuzz.partial_ratio(name, orgName[0])
+        ratio = fuzz.ratio(name,  orgName[0])
+        tokenSort = fuzz.token_sort_ratio(name, orgName[0])
+
+        average = (partial + ratio + tokenSort)/3
+    return average
+
 def put_id(data):
     for orgUnit in orgUnits:
         # if there is a match
@@ -49,25 +61,26 @@ def put_id(data):
     return data
 
 def reStructure(path):
+    #pd.set_option('display.max_rows', None)
     df = pd.read_csv(path)
     df['period'] = df['period'].apply(change_date)
     #excel_data_df['reporting unit'] = excel_data_df['reporting unit'].apply(put_id)
 
-    string = "Neno Boma"
-    id = "bjasbxiabns"
-
-    #partial = fuzz.partial_ratio(df['reporting unit'].item().tolist(), string.lower())
-    #ratio = fuzz.ratio(df['reporting unit'].item(), string.lower())
-    #tokenSort = fuzz.token_sort_ratio(df['reporting unit'].item(), string.lower())
-
-    df['reporting unit'] = np.where(
-        df['reporting unit'] == string
-        , id, df['reporting unit'])
-    #for orgUnit in orgUnits:
-        #df['reporting unit'] = df['reporting unit'].replace([str(orgUnit[0])],str(orgUnit[0]))
+    choices = df['reporting unit'].unique()
+    for index, orgName in enumerate(orgUnits):
+        df['reporting unit'] = np.where(df['reporting unit'] == orgName[0], orgName[1], df['reporting unit'])
+        possibilities = process.extract(str(orgName[0]), choices, limit=100, scorer=fuzz.ratio)
+        #df['reporting unit'] = np.where(df['reporting unit'] == orgName[0], orgName[1], df['reporting unit'])
+        variate = [possible[0] for possible in possibilities if possible[1] > 73]
+        if len(variate) != 0:
+            print(variate[0])
+            df['reporting unit'] = np.where(df['reporting unit'] == variate[0], orgName[1], df['reporting unit'])
 
     print(df)
 
+    editedFileName = filePath + "{}.csv".format(newFileName)
+    print(editedFileName)
+    #df.to_csv(editedFileName, index=False)
 
 if filename.lower().endswith('.csv'):
     reStructure(filename)
