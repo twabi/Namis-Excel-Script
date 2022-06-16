@@ -28,8 +28,10 @@ def reStructure(path) :
     startIndexes = [x for x in range(len(markets)) if markets[x] == "MARKET"]
     endIndexes = [x for x in range(len(markets)) if markets[x] == "AVERAGE PR."]
 
+    print(startIndexes)
+    print(endIndexes)
     #extract the data from the excel file using the starting and ending indexes specified above, as cell ranges
-    for x in range(len(endIndexes)) :
+    for x in range(len(endIndexes) - 1) :
         cIndex = startIndexes[x] - 1
         cropAdd = "A" + str(cIndex)
         cropName = md.ws(ws='Sheet1').address(address=cropAdd)
@@ -41,10 +43,14 @@ def reStructure(path) :
         addRange = startAdd+ ":" + endAdd
 
         crops = md.ws(ws='Sheet1').range(address=addRange, formula=False)
-        crops[0][0] = cropName
 
-        #add it to the global array variable to be used later in the writing the new excel file
-        sheetDictionary.append(crops)
+        print(crops)
+        if len(crops) > 0:
+            crops[0][0] = cropName
+
+            # add it to the global array variable to be used later in the writing the new excel file
+            sheetDictionary.append(crops)
+
 
     # take this list for example as our input data that we want to put in column A
     columnHeader = ["Crop", "Data Element", "Org Unit", "Value"]
